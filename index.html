@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NeuroTrack | Movement Assessment</title>
+  <meta name="description" content="NeuroTrack movement assessment prototype dashboard" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">N</div><div><strong>NeuroTrack</strong><span>Movement Lab</span></div></div>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item active" data-view="assessment"><span>◉</span> Assessment</button>
+      <button class="nav-item" data-view="patients"><span>♙</span> Patients</button>
+      <button class="nav-item" data-view="reports"><span>▤</span> Session reports</button>
+      <button class="nav-item" data-view="progress"><span>↗</span> Patient progress</button>
+      <button class="nav-item" data-view="validation"><span>✓</span> Validation lab</button>
+      <div class="sidebar-bottom"><div class="connection-dot" id="sidebarConnectionDot"></div><div><strong id="connectionLabel">Device disconnected</strong><span id="connectionSubLabel">Connect ESP32 by USB</span></div></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div><div class="eyebrow">CLINICAL MOVEMENT MONITORING</div><h1 id="pageTitle">Assessment workspace</h1></div><div class="top-actions"><span class="demo-pill" id="modePill"><span></span> HARDWARE MODE</span><div class="avatar">NT</div></div></header>
+
+      <section class="welcome-row">
+        <div><h2>Good afternoon, clinician <span>✳</span></h2><p>Set up a session, capture movement data, and review progress over time.</p></div>
+        <div class="date-chip" id="todayLabel">TODAY</div>
+      </section>
+
+      <div class="notice"><span class="notice-icon">ⓘ</span><div><strong>Prototype status</strong><p id="topNoticeText">Connect the ESP32 using desktop Chrome or Edge to record real MPU6050 data. Sessions are stored in this browser; Firebase is not connected in this build.</p></div></div>
+
+      <section class="layout-grid" id="assessmentView">
+        <div class="left-column">
+          <section class="panel setup-panel">
+            <div class="panel-heading"><div><span class="step-label">STEP 01</span><h3>Set up assessment</h3></div><span class="tiny-status">● READY</span></div>
+            <label for="patientSelect">Patient profile</label>
+            <select id="patientSelect" class="field"><option value="NT-001">NT-001 · Team member 1</option><option value="NT-002">NT-002 · Team member 2</option><option value="NT-003">NT-003 · Team member 3</option></select><div class="inline-add"><input id="newParticipantName" class="field" type="text" placeholder="Add teammate name (optional)" maxlength="40"><button class="secondary-button" id="addParticipantBtn" type="button">Add profile</button></div>
+            <div class="field-grid">
+              <div><label for="placementSelect">Sensor placement</label><select id="placementSelect" class="field"><option value="wrist">Wrist</option><option value="forearm">Forearm</option><option value="head">Head / neck</option><option value="ankle">Ankle / foot</option></select></div>
+              <div><label for="exerciseSelect">Exercise / task</label><select id="exerciseSelect" class="field"></select></div>
+            </div>
+            <div class="exercise-info" id="exerciseInfo"><div class="info-icon">↗</div><div><strong>Resting tremor recording</strong><p>Support the forearm and relax the hand. Record movement without intentionally moving.</p><span class="metric-tag">Frequency</span><span class="metric-tag">Amplitude</span></div></div>
+            <div class="duration-row"><div><label for="durationSelect">Recording duration</label><select id="durationSelect" class="field small-field"><option value="20" selected>20 seconds</option></select></div><div class="sensor-state"><span class="state-dot" id="sensorDot"></span><div><strong id="sensorStateTitle">Sensor not connected</strong><span id="sensorStateText">Connect ESP32 by USB</span></div></div></div><div class="device-buttons"><button class="secondary-button" id="connectBtn" type="button">Connect ESP32</button><button class="primary-button" id="startBtn" disabled><span>▶</span> Start real recording <span class="button-arrow">→</span></button></div>
+          </section>
+
+          <section class="panel session-panel">
+            <div class="panel-heading"><div><span class="step-label">STEP 02</span><h3>Live session</h3></div><span class="live-pill" id="sessionStatus">● WAITING</span></div>
+            <div class="session-display"><div class="timer-ring" id="timerRing"><div><strong id="timerValue">00:00</strong><span>TIME ELAPSED</span></div></div><div class="session-copy"><h4 id="sessionExercise">No session started</h4><p id="sessionMessage">Connect the ESP32, select a participant and exercise, then start a real 20-second recording.</p><div id="angleCue" class="angle-cue">Angle protocol activates for wrist flexion / extension.</div><div class="angle-live-metrics"><div><span>Current excursion</span><strong id="angleLiveValue">—</strong></div><div><span>Peak excursion</span><strong id="anglePeakValue">—</strong></div></div><div class="progress-track"><div id="progressBar"></div></div><span class="progress-caption" id="progressCaption">Ready when you are</span></div></div>
+            <div class="live-metrics"><div><span>Repetitions</span><strong id="liveReps">—</strong></div><div><span>Signal quality</span><strong id="liveQuality">—</strong></div><div><span>Samples</span><strong id="liveSamples">—</strong></div></div>
+            <div class="session-controls"><button class="secondary-button" id="stopBtn" disabled>20s fixed run</button><button class="secondary-button" id="downloadRawBtn" disabled>Download raw CSV</button><span>Only measured sensor samples are reported.</span></div><div class="chart-wrap"><div class="chart-heading"><strong>Live gyroscope signal</strong><span id="chartSubLabel">Waiting for sensor samples</span></div><canvas id="liveChart" width="900" height="220" aria-label="Live gyroscope chart"></canvas></div>
+          </section>
+        </div>
+
+        <div class="right-column">
+          <section class="panel patient-card"><div class="patient-top"><div class="patient-avatar" id="patientAvatar">A</div><div><span class="step-label">SELECTED PATIENT</span><h3 id="patientName">Demo patient A</h3><p id="patientMeta">P-001 · Demo profile</p></div><button class="more-btn" aria-label="More options">•••</button></div><div class="patient-stats"><div><span>Sessions</span><strong id="patientSessions">4</strong></div><div><span>Last session</span><strong id="lastSession">Oct 10</strong></div><div><span>Profile</span><strong>Demo</strong></div></div><div class="patient-foot"><span class="profile-dot"></span><span id="profileFoot">Local participant profile</span></div></section>
+
+          <section class="panel overview-panel"><div class="panel-heading"><div><span class="step-label">SESSION OVERVIEW</span><h3>Today's progress</h3></div><span class="calendar-icon">▦</span></div><div class="overview-number"><strong id="todayCount">0</strong><span>sessions completed today</span></div><div class="mini-bars" aria-label="Illustrative weekly activity"><i style="height:34%"></i><i style="height:50%"></i><i style="height:42%"></i><i style="height:72%"></i><i style="height:56%"></i><i style="height:85%"></i><i class="today-bar" style="height:28%"></i></div><div class="week-labels"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div><p class="muted-note">Illustrative activity, not patient data.</p></section>
+
+          <section class="panel recent-panel"><div class="panel-heading"><div><span class="step-label">HISTORY</span><h3>Recent sessions</h3></div><button class="text-button" id="viewReportsBtn">View all →</button></div><div id="recentList" class="recent-list"><div class="empty-state"><span>◷</span><p>Your completed demo sessions will appear here.</p></div></div></section>
+        </div>
+
+      <section class="panel profile-history-panel" id="profileHistoryPanel">
+        <div class="panel-heading"><div><span class="step-label">SELECTED PROFILE</span><h3>Saved readings by day</h3></div><button class="secondary-button" id="openProfileProgressBtn" type="button">View graphs &amp; trends</button></div>
+        <p class="muted-note">Saved session summaries stay in this browser after reopening the website. Select a participant above to see their sessions grouped by date. Raw sensor samples are not retained after a page reload; export the raw CSV during each recording.</p>
+        <div id="profileHistoryList" class="profile-history-list"><div class="progress-empty">No saved sessions for this profile yet.</div></div>
+      </section>
+
+      </section>
+
+      <section class="panel report-panel hidden" id="reportView"><div class="panel-heading"><div><span class="step-label">SESSION SUMMARY</span><h3>Today's session report</h3></div><button class="secondary-button" id="backBtn">← Back to assessment</button></div><div id="reportHistoryList" class="report-history-list"></div><div id="reportContent"><div class="empty-state"><span>▤</span><p>Complete a recording to generate a report.</p></div></div></section>
+      <section class="panel progress-view hidden" id="progressView">
+        <div class="panel-heading"><div><span class="step-label">LONGITUDINAL OVERVIEW</span><h3>Patient progress</h3></div><button class="secondary-button" id="downloadProgressBtn" type="button">Export progress CSV</button></div>
+        <p class="muted-note">Shows recorded measurements from this browser only. Compare the same exercise and sensor placement across visits. These are engineering indicators, not a clinical score.</p>
+        <div class="progress-filter-row">
+          <div><label for="progressPatientSelect">Participant</label><select id="progressPatientSelect" class="field"></select></div>
+          <div><label for="progressPlacementSelect">Body region</label><select id="progressPlacementSelect" class="field"><option value="all">All body regions</option><option value="wrist">Wrist</option><option value="forearm">Forearm</option><option value="head">Head / neck</option><option value="ankle">Ankle / foot</option></select></div>
+          <div><label for="progressExerciseSelect">Exercise</label><select id="progressExerciseSelect" class="field"><option value="all">All exercises</option></select></div>
+          <div><label for="progressStartDate">From date</label><input id="progressStartDate" class="field" type="date"></div>
+          <div><label for="progressEndDate">To date</label><input id="progressEndDate" class="field" type="date"></div>
+          <div class="progress-filter-actions"><label>&nbsp;</label><button class="secondary-button" id="clearProgressFiltersBtn" type="button">Clear filters</button></div>
+        </div>
+        <p id="progressFilterCount" class="muted-note" aria-live="polite"></p>
+        <div class="progress-kpis" id="progressKpis"></div>
+        <div class="progress-chart-card"><div class="chart-heading"><strong>Gyroscope vector RMS across sessions</strong><span>°/s · actual saved measurements</span></div><canvas id="progressChart" width="900" height="260" aria-label="Gyroscope RMS over time"></canvas><p id="progressChartNote" class="muted-note"></p></div>
+        <div class="progress-table-wrap"><h4>Assessment history</h4><div id="progressHistory"></div></div>
+      </section>
+      <section class="panel patients-view hidden" id="patientsView"><div class="panel-heading"><div><span class="step-label">PATIENT MANAGEMENT</span><h3>Demo patient profiles</h3></div></div><p class="muted-note">Use anonymous IDs for this student pilot. Profiles and recordings are stored in this browser only. Do not enter real patient identifiers or medical histories.</p><div class="patient-directory" id="patientDirectory"></div></section>
+      <section class="panel validation-view hidden" id="validationView">
+        <div class="panel-heading"><div><span class="step-label">MEASUREMENT QUALITY</span><h3>Validation &amp; reliability lab</h3></div><span class="tiny-status">ENGINEERING PILOT</span></div>
+        <div class="notice"><span class="notice-icon">ⓘ</span><div><strong>What this page can establish</strong><p>It calculates agreement with reference measurements you enter and summarizes technical recording checks. It does not establish clinical validity, diagnose a condition, or automatically verify that a reference instrument is accurate.</p></div></div>
+        <div class="validation-grid">
+          <section class="validation-card"><h4>1 · Paired angle measurements</h4><p class="muted-note">For each trial, enter the NeuroTrack estimated peak excursion and a reference angle measured using a consistent protocol (for example, a goniometer). Use the same movement, participant code, placement and assessor where possible.</p>
+            <div class="validation-form-grid">
+              <div><label for="validationParticipant">Anonymous participant / trial group</label><input id="validationParticipant" class="field" maxlength="40" placeholder="e.g. NT-001"></div>
+              <div><label for="validationTrial">Trial label</label><input id="validationTrial" class="field" maxlength="40" placeholder="e.g. Trial 1"></div>
+              <div><label for="validationDeviceAngle">NeuroTrack angle (°)</label><input id="validationDeviceAngle" class="field" type="number" min="0" max="180" step="0.1" placeholder="e.g. 42.5"></div>
+              <div><label for="validationReferenceAngle">Reference angle (°)</label><input id="validationReferenceAngle" class="field" type="number" min="0" max="180" step="0.1" placeholder="e.g. 45"></div>
+              <div class="validation-wide"><label for="validationNotes">Protocol / notes (optional)</label><input id="validationNotes" class="field" maxlength="180" placeholder="Sensor position, assessor, goniometer method…"></div>
+            </div>
+            <div class="device-buttons"><button id="saveValidationBtn" class="primary-button" type="button">Save paired measurement</button><button id="exportValidationBtn" class="secondary-button" type="button">Export validation CSV</button></div>
+            <div id="validationMetrics" class="validation-kpis"></div><div id="validationTable" class="validation-table-wrap"><p class="muted-note">No paired measurements saved yet.</p></div>
+          </section>
+          <section class="validation-card"><h4>2 · Signal quality gate</h4><p class="muted-note">Each completed session is checked for sample completeness, numeric validity and obvious sensor-range clipping. These are preliminary engineering rules; they are not validated clinical thresholds.</p>
+            <div class="quality-rule"><strong>Good recording</strong><span>At least 95% of expected samples and no detected numeric/clipping issue.</span></div>
+            <div class="quality-rule"><strong>Review recording</strong><span>80–94.9% of expected samples, or a technical warning requiring review.</span></div>
+            <div class="quality-rule"><strong>Invalid / incomplete</strong><span>Below 80% of expected samples, too few samples, or no usable sensor data.</span></div>
+            <p class="muted-note">The current expectation is 20 seconds at approximately 100 samples/second. Confirm this matches your firmware before treating completeness as meaningful. Quality labels only flag technical concerns.</p>
+            <div id="qualityLatest" class="quality-latest"><strong>No completed session checked yet</strong><p>Complete a recording to see its signal quality assessment in the report.</p></div>
+          </section>
+        </div>
+        <section class="validation-card backup-card"><h4>3 · Keep your project usable long-term</h4><p class="muted-note">Saved sessions and profiles currently live in this browser only. Hosting the site on a new domain creates a separate browser storage area. Export a backup before changing browsers, devices, folders or hosting addresses.</p>
+          <div class="backup-actions"><button id="exportBackupBtn" class="primary-button" type="button">Export app backup (JSON)</button><label class="secondary-button import-label" for="importBackupInput">Import app backup</label><input id="importBackupInput" type="file" accept=".json,application/json" hidden></div>
+          <p class="muted-note">The JSON backup includes participant profiles, saved session summaries and validation entries. Raw sample arrays are not retained after a page reload; download each session's raw CSV while it is available. Keep backups private and use anonymous participant codes only.</p>
+          <div id="backupStatus" class="muted-note" aria-live="polite"></div>
+        </section>
+      </section>
+      <footer>NeuroTrack prototype · Real sensor capture pilot <span>Not a diagnostic device</span></footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
