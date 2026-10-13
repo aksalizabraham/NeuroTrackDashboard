@@ -6,7 +6,7 @@
 // NeuroTrack multi-region movement recording prototype.
 // ESP32 + MPU6050-compatible IMU (I2C 0x69), SDA=21, SCL=22, Serial=115200.
 // SSD1306 I2C OLED assumed at 0x3C (128x64). If the OLED is absent, sensor recording continues.
-// Commands 1-9 correspond to dashboard exercises. Each test records 20 seconds.
+// Commands 1-9 and A-C correspond to dashboard exercises. Each test records 20 seconds.
 // Exploratory engineering measurements only; not a diagnosis or validated clinical score.
 
 #define OLED_WIDTH 128
@@ -24,7 +24,7 @@ const uint32_t MIN_REP_INTERVAL_MS = 300;
 const float ANGLE_REP_START_DEG = 15.0f, ANGLE_REP_RETURN_DEG = 7.0f;
 const uint32_t ANGLE_BASELINE_MS = 2000, ANGLE_MIN_REP_MS = 400;
 
-enum Mode { NONE, WRIST_REST, WRIST_POSTURE, WRIST_FLEX_EXT, FOREARM_PRON_SUP, HEAD_STILL, HEAD_LEFT_RIGHT, HEAD_UP_DOWN, ANKLE_STILL, ANKLE_DORSI_PLANTAR };
+enum Mode { NONE, WRIST_REST, WRIST_POSTURE, WRIST_FLEX_EXT, FOREARM_PRON_SUP, HEAD_STILL, HEAD_LEFT_RIGHT, HEAD_UP_DOWN, ANKLE_STILL, ANKLE_DORSI_PLANTAR, FINGER_REST, FINGER_POSTURE, FINGER_OPEN_CLOSE };
 Mode mode = NONE;
 bool recording = false;
 uint32_t startMs = 0, nextSampleUs = 0, lastRepMs = 0, sampleCount = 0, failedReads = 0, lastOledMs = 0;
@@ -55,10 +55,11 @@ const char* modeName() {
   switch(mode) {
     case WRIST_REST:return "wrist_rest"; case WRIST_POSTURE:return "wrist_postural_hold"; case WRIST_FLEX_EXT:return "wrist_flexion_extension";
     case FOREARM_PRON_SUP:return "forearm_pronation_supination"; case HEAD_STILL:return "head_still"; case HEAD_LEFT_RIGHT:return "head_horizontal_turns";
-    case HEAD_UP_DOWN:return "head_vertical_tilts"; case ANKLE_STILL:return "ankle_still"; case ANKLE_DORSI_PLANTAR:return "ankle_dorsiflexion_plantarflexion"; default:return "none";
+    case HEAD_UP_DOWN:return "head_vertical_tilts"; case ANKLE_STILL:return "ankle_still"; case ANKLE_DORSI_PLANTAR:return "ankle_dorsiflexion_plantarflexion";
+    case FINGER_REST:return "finger_rest"; case FINGER_POSTURE:return "finger_posture"; case FINGER_OPEN_CLOSE:return "finger_open_close"; default:return "none";
   }
 }
-bool repetitive() { return mode==WRIST_FLEX_EXT || mode==FOREARM_PRON_SUP || mode==HEAD_LEFT_RIGHT || mode==HEAD_UP_DOWN || mode==ANKLE_DORSI_PLANTAR; }
+bool repetitive() { return mode==WRIST_FLEX_EXT || mode==FOREARM_PRON_SUP || mode==HEAD_LEFT_RIGHT || mode==HEAD_UP_DOWN || mode==ANKLE_DORSI_PLANTAR || mode==FINGER_OPEN_CLOSE; }
 
 void resetStats() {
   sampleCount=failedReads=reps=lastRepMs=0; lastDirection=0;
@@ -88,14 +89,15 @@ void updateOled(uint32_t elapsed) {
     display.print("Reps: "); display.println(reps);
     display.print("Samples: "); display.println(sampleCount);
   } else {
-    display.println("NeuroTrack ready"); display.println("ESP32 + MPU6050"); display.println("USB: 115200 baud"); display.println("Dashboard commands"); display.println("1-9 start 20s test");
+    display.println("NeuroTrack ready"); display.println("ESP32 + MPU6050"); display.println("USB: 115200 baud"); display.println("Dashboard commands"); display.println("1-9, A-C: 20s test");
   }
   display.display();
 }
 void menu() {
-  Serial.println(); Serial.println("# NeuroTrack 20-second tests; send digit 1-9");
+  Serial.println(); Serial.println("# NeuroTrack 20-second tests; send 1-9 or A-C");
   Serial.println("#1 wrist rest, #2 wrist posture, #3 wrist flex/extend, #4 forearm pronation/supination");
   Serial.println("#5 head still, #6 head left/right, #7 head up/down, #8 ankle still, #9 ankle up/down");
+  Serial.println("#A hand/finger rest, #B hand/finger posture, #C finger open/close (hand-level IMU motion)");
 }
 void beginMode(Mode m) {
   mode=m; recording=true; startMs=millis(); nextSampleUs=micros(); resetStats();
@@ -121,7 +123,8 @@ void command(char c) {
   if(recording) return;
   switch(c) { case '1':beginMode(WRIST_REST);break; case '2':beginMode(WRIST_POSTURE);break; case '3':beginMode(WRIST_FLEX_EXT);break;
     case '4':beginMode(FOREARM_PRON_SUP);break; case '5':beginMode(HEAD_STILL);break; case '6':beginMode(HEAD_LEFT_RIGHT);break;
-    case '7':beginMode(HEAD_UP_DOWN);break; case '8':beginMode(ANKLE_STILL);break; case '9':beginMode(ANKLE_DORSI_PLANTAR);break; }
+    case '7':beginMode(HEAD_UP_DOWN);break; case '8':beginMode(ANKLE_STILL);break; case '9':beginMode(ANKLE_DORSI_PLANTAR);break;
+    case 'A':case 'a':beginMode(FINGER_REST);break; case 'B':case 'b':beginMode(FINGER_POSTURE);break; case 'C':case 'c':beginMode(FINGER_OPEN_CLOSE);break; }
 }
 
 void setup() {
