@@ -6,7 +6,7 @@ The project explores motion capture, wrist-angle estimation, repetition tracking
 
 ## Live Demo
 
-**Dashboard:** https://aksalizabraham.github.io/NeuroTrackDashboard/
+**Dashboard:** https://aksalizabraham.github.io/NeuroTrackDashboard/index.html
 
 **Repository:** https://github.com/aksalizabraham/NeuroTrackDashboard
 
