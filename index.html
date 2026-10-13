@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NeuroTrack | Movement Assessment</title>
+  <meta name="description" content="NeuroTrack movement assessment prototype dashboard" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">N</div><div><strong>NeuroTrack</strong><span>Movement Lab</span></div></div>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item active" data-view="assessment"><span>◉</span> Assessment</button>
+      <button class="nav-item" data-view="patients"><span>♙</span> Patients</button>
+      <button class="nav-item" data-view="reports"><span>▤</span> Session reports</button>
+      <div class="sidebar-bottom"><div class="connection-dot"></div><div><strong>Demo workspace</strong><span>Local preview · no device connected</span></div></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div><div class="eyebrow">CLINICAL MOVEMENT MONITORING</div><h1 id="pageTitle">Assessment workspace</h1></div><div class="top-actions"><span class="demo-pill"><span></span> DEMO MODE</span><div class="avatar">NT</div></div></header>
+
+      <section class="welcome-row">
+        <div><h2>Good afternoon, clinician <span>✳</span></h2><p>Set up a session, capture movement data, and review progress over time.</p></div>
+        <div class="date-chip" id="todayLabel">TODAY</div>
+      </section>
+
+      <div class="notice"><span class="notice-icon">ⓘ</span><div><strong>Interface preview only</strong><p>This version uses simulated demo results. It is not connected to the ESP32 or Firebase, and scores are not clinical measurements.</p></div></div>
+
+      <section class="layout-grid" id="assessmentView">
+        <div class="left-column">
+          <section class="panel setup-panel">
+            <div class="panel-heading"><div><span class="step-label">STEP 01</span><h3>Set up assessment</h3></div><span class="tiny-status">● READY</span></div>
+            <label for="patientSelect">Patient profile</label>
+            <select id="patientSelect" class="field"><option value="P-001">P-001 · Demo patient A</option><option value="P-002">P-002 · Demo patient B</option><option value="P-003">P-003 · Demo patient C</option></select>
+            <div class="field-grid">
+              <div><label for="placementSelect">Sensor placement</label><select id="placementSelect" class="field"><option value="wrist">Wrist / hand</option><option value="forearm">Forearm</option><option value="head">Head</option><option value="ankle">Lower leg / ankle</option></select></div>
+              <div><label for="exerciseSelect">Exercise / task</label><select id="exerciseSelect" class="field"></select></div>
+            </div>
+            <div class="exercise-info" id="exerciseInfo"><div class="info-icon">↗</div><div><strong>Resting tremor recording</strong><p>Support the forearm and relax the hand. Record movement without intentionally moving.</p><span class="metric-tag">Frequency</span><span class="metric-tag">Amplitude</span></div></div>
+            <div class="duration-row"><div><label for="durationSelect">Recording duration</label><select id="durationSelect" class="field small-field"><option value="10">10 seconds · quick test</option><option value="30" selected>30 seconds · standard demo</option><option value="60">60 seconds · extended</option></select></div><div class="sensor-state"><span class="state-dot"></span><div><strong>Sensor not connected</strong><span>Demo session will be simulated</span></div></div></div>
+            <button class="primary-button" id="startBtn"><span>▶</span> Start demo session <span class="button-arrow">→</span></button>
+          </section>
+
+          <section class="panel session-panel">
+            <div class="panel-heading"><div><span class="step-label">STEP 02</span><h3>Live session</h3></div><span class="live-pill" id="sessionStatus">● WAITING</span></div>
+            <div class="session-display"><div class="timer-ring" id="timerRing"><div><strong id="timerValue">00:00</strong><span>TIME ELAPSED</span></div></div><div class="session-copy"><h4 id="sessionExercise">No session started</h4><p id="sessionMessage">Choose an assessment and start a demo session to preview the workflow.</p><div class="progress-track"><div id="progressBar"></div></div><span class="progress-caption" id="progressCaption">Ready when you are</span></div></div>
+            <div class="live-metrics"><div><span>Repetitions</span><strong id="liveReps">—</strong></div><div><span>Signal quality</span><strong id="liveQuality">—</strong></div><div><span>Samples</span><strong id="liveSamples">—</strong></div></div>
+            <div class="session-controls"><button class="secondary-button" id="stopBtn" disabled>Stop session</button><span>In a real build, values come from the ESP32.</span></div>
+          </section>
+        </div>
+
+        <div class="right-column">
+          <section class="panel patient-card"><div class="patient-top"><div class="patient-avatar" id="patientAvatar">A</div><div><span class="step-label">SELECTED PATIENT</span><h3 id="patientName">Demo patient A</h3><p id="patientMeta">P-001 · Demo profile</p></div><button class="more-btn" aria-label="More options">•••</button></div><div class="patient-stats"><div><span>Sessions</span><strong id="patientSessions">4</strong></div><div><span>Last session</span><strong id="lastSession">Oct 10</strong></div><div><span>Profile</span><strong>Demo</strong></div></div><div class="patient-foot"><span class="profile-dot"></span> Example data only</div></section>
+
+          <section class="panel overview-panel"><div class="panel-heading"><div><span class="step-label">SESSION OVERVIEW</span><h3>Today's progress</h3></div><span class="calendar-icon">▦</span></div><div class="overview-number"><strong id="todayCount">0</strong><span>sessions completed today</span></div><div class="mini-bars" aria-label="Illustrative weekly activity"><i style="height:34%"></i><i style="height:50%"></i><i style="height:42%"></i><i style="height:72%"></i><i style="height:56%"></i><i style="height:85%"></i><i class="today-bar" style="height:28%"></i></div><div class="week-labels"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div><p class="muted-note">Illustrative activity, not patient data.</p></section>
+
+          <section class="panel recent-panel"><div class="panel-heading"><div><span class="step-label">HISTORY</span><h3>Recent sessions</h3></div><button class="text-button" id="viewReportsBtn">View all →</button></div><div id="recentList" class="recent-list"><div class="empty-state"><span>◷</span><p>Your completed demo sessions will appear here.</p></div></div></section>
+        </div>
+      </section>
+
+      <section class="panel report-panel hidden" id="reportView"><div class="panel-heading"><div><span class="step-label">SESSION SUMMARY</span><h3>Today's session report</h3></div><button class="secondary-button" id="backBtn">← Back to assessment</button></div><div id="reportContent"><div class="empty-state"><span>▤</span><p>Complete a demo session to generate a report preview.</p></div></div></section>
+      <section class="panel patients-view hidden" id="patientsView"><div class="panel-heading"><div><span class="step-label">PATIENT MANAGEMENT</span><h3>Demo patient profiles</h3></div></div><p class="muted-note">These are fictional profiles for interface testing. Add secure authentication and access controls before using real patient data.</p><div class="patient-directory" id="patientDirectory"></div></section>
+      <footer>NeuroTrack prototype · Built for research and interface testing <span>Not a medical device</span></footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
